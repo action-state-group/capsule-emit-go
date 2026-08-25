@@ -16,43 +16,65 @@ go get github.com/ethanyzhang/capsule-producer-go
 ## Build, sign, and verify
 
 ```go
-publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
-if err != nil {
-	return err
-}
-identity, err := producer.NewEd25519SigningIdentity(privateKey)
-if err != nil {
-	return err
+package main
+
+import (
+	"bytes"
+	"crypto/ed25519"
+	"crypto/rand"
+	"fmt"
+	"log"
+	"time"
+
+	producer "github.com/ethanyzhang/capsule-producer-go"
+)
+
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
 }
 
-input := producer.Input{
-	ActionID:   "send-018f6f4d",
-	ActionType: producer.ActionTypeDecide,
-	Operator:   "local-operator",
-	Developer:  "example-agent@1.0.0",
-	Timestamp:  time.Now(),
-	Disposition: &producer.Disposition{
-		Decision:      producer.DecisionAccept,
-		Approver:      producer.ApproverPolicy,
-		VerdictClass:  producer.VerdictExecuted,
-		HumanDisposed: false,
-	},
-}
+func run() error {
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return err
+	}
+	identity, err := producer.NewEd25519SigningIdentity(privateKey)
+	if err != nil {
+		return err
+	}
 
-result, err := producer.Seal(input, identity)
-if err != nil {
-	return err
-}
-class1, err := producer.VerifyCapsule(result.Payload)
-if err != nil || !class1.OK {
-	return err
-}
-authenticated, err := producer.VerifyEnvelope(result.CapsuleID, result.Envelope)
-if err != nil {
-	return err
-}
-if !bytes.Equal(authenticated.PublicKey, publicKey) {
-	return fmt.Errorf("Producer Envelope signer is not authorized")
+	input := producer.Input{
+		ActionID:   "send-018f6f4d",
+		ActionType: producer.ActionTypeDecide,
+		Operator:   "local-operator",
+		Developer:  "example-agent@1.0.0",
+		Timestamp:  time.Now(),
+		Disposition: &producer.Disposition{
+			Decision:      producer.DecisionAccept,
+			Approver:      producer.ApproverPolicy,
+			VerdictClass:  producer.VerdictExecuted,
+			HumanDisposed: false,
+		},
+	}
+
+	result, err := producer.Seal(input, identity)
+	if err != nil {
+		return err
+	}
+	class1, err := producer.VerifyCapsule(result.Payload)
+	if err != nil || !class1.OK {
+		return err
+	}
+	authenticated, err := producer.VerifyEnvelope(result.CapsuleID, result.Envelope)
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(authenticated.PublicKey, publicKey) {
+		return fmt.Errorf("Producer Envelope signer is not authorized")
+	}
+	return nil
 }
 ```
 
@@ -74,6 +96,7 @@ never reinterpret foreign bytes as JSON.
 Capsule-ID references. It rejects empty membership and duplicate IDs.
 
 ```go
+// illustrative — see the full example above for setup and error handling
 carried, err := producer.Received(input, artifactBytes, "provider-ack")
 composed, err := producer.Compose(input, []producer.BuiltPayload{first, carried})
 envelope, err := producer.Sign(composed, identity)
