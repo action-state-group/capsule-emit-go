@@ -381,11 +381,6 @@ The reference enters through `Input`, including `SealInput.Capsule` when using
 `DigestJSON` keeps JCS negative-zero normalization. Python's optional strict
 raw-input verification tier is a separate API, not a new Capsule-ID algorithm.
 
-The reference feature requires the corresponding AAC Go verifier update.
-For coordinated source development before that dependency revision is published,
-use a temporary Go workspace containing this module and `agent-action-capsule/go`.
-Update the module dependency to the released revision before shipping this feature.
-
 ```bash
 go fmt ./...
 go mod tidy
