@@ -17,7 +17,7 @@ import (
 
 // format4InteropPack is one frozen Python-generated pack and the spec_version
 // every record in it carries. The -04 pack shipped in v0.1.0 and is never
-// rewritten.
+// rewritten; the -05 pack beside it is its twin from the same input.json.
 type format4InteropPack struct {
 	root        string
 	specVersion string
@@ -25,6 +25,7 @@ type format4InteropPack struct {
 
 var format4InteropPacks = []format4InteropPack{
 	{root: "testdata/capsule-emit/format4-interop", specVersion: "draft-mih-scitt-agent-action-capsule-04"},
+	{root: "testdata/capsule-emit/format4-interop-v05", specVersion: SpecVersion},
 }
 
 type format4InteropSpec struct {
@@ -132,8 +133,9 @@ func assertFormat4InteropManifestCoversRequiredRecords(t *testing.T, pack format
 }
 
 // TestFormat4InteropReplaysPythonVectorsByteForByte proves Go and Python
-// capsule-emit produce identical Capsule, ID, and Envelope bytes for the
-// released -04 pack, replayed through the in-package spec_version override.
+// capsule-emit produce identical Capsule, ID, and Envelope bytes for both the
+// released -04 pack and its -05 twin. The -04 replay pins the in-package
+// spec_version override; the -05 replay is the default Seal path.
 func TestFormat4InteropReplaysPythonVectorsByteForByte(t *testing.T) {
 	for _, pack := range format4InteropPacks {
 		t.Run(pack.specVersion, func(t *testing.T) {

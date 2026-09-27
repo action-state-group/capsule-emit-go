@@ -1,6 +1,8 @@
 package emit
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/action-state-group/agent-action-capsule/go/canonical"
@@ -39,6 +41,35 @@ func TestBuildSealReceivedAndCompositionStampSpecVersion05(t *testing.T) {
 	payload, err := DecodePayload(sealed.Payload)
 	require.NoError(t, err)
 	assert.Equal(t, "draft-mih-scitt-agent-action-capsule-05", payload["spec_version"])
+}
+
+// TestReleasedV04CapsulesAndV05TwinsBothVerify: every committed -04 record in
+// the released interop pack and its -05 twin verify alike; the twins carry
+// different Capsule IDs because spec_version is committed by the ID.
+func TestReleasedV04CapsulesAndV05TwinsBothVerify(t *testing.T) {
+	for _, name := range []string{"authored", "received", "who", "did", "composition"} {
+		t.Run(name, func(t *testing.T) {
+			ids := make([]string, 0, len(format4InteropPacks))
+			for _, pack := range format4InteropPacks {
+				for _, file := range []string{"capsule.detached.jcs", "capsule.stored.json"} {
+					data, err := os.ReadFile(filepath.Join(pack.root, "valid", name, file))
+					require.NoError(t, err)
+					result, err := VerifyCapsule(data)
+					require.NoError(t, err, "%s %s", pack.specVersion, file)
+					require.True(t, result.OK)
+					payload, err := DecodePayload(data)
+					require.NoError(t, err)
+					assert.Equal(t, pack.specVersion, payload["spec_version"])
+				}
+				data, err := os.ReadFile(filepath.Join(pack.root, "valid", name, "capsule.detached.jcs"))
+				require.NoError(t, err)
+				result, err := VerifyCapsule(data)
+				require.NoError(t, err)
+				ids = append(ids, *result.CapsuleID)
+			}
+			assert.NotEqual(t, ids[0], ids[1])
+		})
+	}
 }
 
 // TestVerifyCapsuleNeverRejectsOnSpecVersionAlone: -04, -05 and an
