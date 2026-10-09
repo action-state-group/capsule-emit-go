@@ -1,3 +1,5 @@
+> **Archived 2026-10-09.** Development continues at [action-state-group/capsule-emit](https://github.com/action-state-group/capsule-emit) under `go/`. The Go module path is unchanged until the consumer cutover.
+
 # capsule-emit-go
 
 Go emission core for Agent Action Capsule format 4. The library builds
